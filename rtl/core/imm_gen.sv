@@ -1,4 +1,4 @@
-module immediate_extender(
+module imm_gen(
     input logic [31:0] instruction,
     input logic [2:0] select,
     output logic [31:0]immediate);
@@ -10,7 +10,6 @@ module immediate_extender(
         011 for J immediate sign-extended
         100 for U immediate extended
     */ 
-
 
 
     always_comb begin 
