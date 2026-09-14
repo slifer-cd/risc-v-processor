@@ -1,6 +1,7 @@
 module data_mem(
     input logic clk, we,
-    input logic [31:0] a, wd,
+    input logic [31:0] wd,
+    input logic [11:2] a,
     output logic [31:0] rd
 );
 

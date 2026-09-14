@@ -1,4 +1,4 @@
-module load_extender (
+module load_data_ext (
     input  logic [31:0] data_in,
     input  logic [1:0]  size_select,  //00=Byte, 01=Halfword, 10=Word
     input  logic        is_unsigned,

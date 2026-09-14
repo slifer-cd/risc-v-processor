@@ -1,8 +1,8 @@
 module instr_mem #(
-    parameter INITFILE = "program.hex";
+    parameter INITFILE = "program.hex"
 )(
-    input logic [31:0] a,
-    output logic [31:0] rd,
+    input logic [11:2] a,
+    output logic [31:0] rd
 );
 
     logic [31:0] IMEM [0:1023];

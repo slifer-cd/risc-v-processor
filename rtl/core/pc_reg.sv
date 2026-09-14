@@ -1,9 +1,9 @@
 module pc_reg (
-    input logic ck, rst_n,
+    input logic clk, rst_n,
     input logic [31:0] next_pc,
     output logic [31:0] pc
 );
-    always_ff @( posedge clock or negedge rst_n ) begin
+    always_ff @( posedge clk or negedge rst_n ) begin
         if (!rst_n) 
             pc <= 32'h00000000;
         else

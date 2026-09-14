@@ -1,5 +1,5 @@
 module imm_gen(
-    input logic [31:0] instruction,
+    input logic [31:7] instruction,
     input logic [2:0] select,
     output logic [31:0]immediate);
 
