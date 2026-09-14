@@ -27,6 +27,12 @@ EXTRA_ARGS += --trace --trace-structs -Wall -Wno-fatal
 # Include the standard Cocotb makefile machinery
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
+# The path is now relative to this Makefile
+HEX_PROGRAM = test_sw/program.hex
+
+# Pass it to Verilator/Cocotb
+EXTRA_ARGS += -GINIT_FILE='"$(HEX_PROGRAM)"'
+
 # Clean up simulation artifacts
 clean_sim: clean
 	rm -rf sim/ build/ __pycache__/ results.xml dump.vcd dump.fst
