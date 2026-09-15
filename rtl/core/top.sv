@@ -14,7 +14,7 @@ module top (
 
     logic [31:0] rs1,rs2, imm;
     logic [31:0] alu_in_b, alu_result;
-    logic [31:0] read_data, wd3;
+    logic [31:0] read_data, wd3, write_reg_data;
     logic [2:0] imm_select;
     pc_reg u_pc_reg(
         .clk(clk),
@@ -32,8 +32,11 @@ module top (
 
     logic pc_src;
     assign pc_src = jump | (branch & valid_branch);
+    
+    logic [31:0] pc_jb;
+    assign pc_jb =(jump & alu_src) ? (alu_result & 32'hFFFFFFFE) : (pc + imm);
 
-    assign next_pc = pc_src ? (pc + imm) : pc_plus_4;
+    assign next_pc = pc_src ? pc_jb : pc_plus_4;
 
     control_unit u_control(
         .opcode(instr[6:0]),
@@ -48,7 +51,7 @@ module top (
         .alu_ctrl(alu_ctrl[3:0]),
         .imm_select(imm_select)
     );
-
+    assign write_reg_data = jump ? pc_plus_4 : wd3;
     register_file u_reg_file(
         .clk(clk),
         .rst_n(rst_n),
@@ -58,7 +61,7 @@ module top (
         .rd_addr(instr[11:7]),
         .rs1_data(rs1),
         .rs2_data(rs2),
-        .rd_data(wd3)
+        .rd_data(write_reg_data)
     );
 
     imm_gen u_imm_gen(
