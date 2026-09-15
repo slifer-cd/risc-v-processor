@@ -9,7 +9,7 @@ module top (
 
 
     logic reg_wirte, mem_write, alu_src, result_src;
-    logic branch, jump, zero;
+    logic branch, jump, zero, lt,ltu;
     logic [3:0] alu_ctrl;
 
     logic [31:0] rs1,rs2, imm;
@@ -44,7 +44,7 @@ module top (
         .branch(branch),
         .jump(jump),
         .func3(instr[14:12]),
-        .func7(instr[30]),
+        .instr30(instr[30]),
         .alu_ctrl(alu_ctrl[3:0]),
         .imm_select(imm_select)
     );
@@ -74,17 +74,28 @@ module top (
         .b(alu_in_b),
         .alu_ctrl(alu_ctrl),
         .result(alu_result),
-        .eq(zero)
+        .eq(zero),
+        .lt(lt),
+        .ltu(ltu)
     );
 
     data_mem u_data_mem(
         .clk(clk),
         .we(mem_write),
-        .a(alu_result[11:2]),
+        .a(alu_result[11:0]),
         .wd(rs2),
+        .func3(instr[13:12]),
         .rd(read_data)
     );
+    logic [31:0] load_data;
+    load_data_ext u_load_data_ext(
+        .data_in(read_data),
+        .size_select(instr[13:12]),
+        .is_unsigned(instr[14]),
+        .offset(alu_result[1:0]),
+        .data_out(load_data)
+        );
 
-    assign wd3 = result_src? read_data:alu_result;
+    assign wd3 = result_src? load_data:alu_result;
 
 endmodule
