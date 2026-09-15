@@ -9,7 +9,7 @@ module top (
 
 
     logic reg_wirte, mem_write, alu_src, result_src;
-    logic branch, jump, zero, lt,ltu;
+    logic branch, jump, zero, lt, ltu, valid_branch;
     logic [3:0] alu_ctrl;
 
     logic [31:0] rs1,rs2, imm;
@@ -31,7 +31,7 @@ module top (
     assign pc_plus_4 = pc + 32'd4;
 
     logic pc_src;
-    assign pc_src = jump | (branch & zero);
+    assign pc_src = jump | (branch & valid_branch);
 
     assign next_pc = pc_src ? (pc + imm) : pc_plus_4;
 
@@ -78,6 +78,16 @@ module top (
         .lt(lt),
         .ltu(ltu)
     );
+
+    branch_checker u_branch_checker(
+        .zero(zero),
+        .lt(lt),
+        .ltu(ltu),
+        .func3(instr[14:12]),
+        .valid_branch(valid_branch)
+    );
+
+
 
     data_mem u_data_mem(
         .clk(clk),
