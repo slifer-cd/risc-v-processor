@@ -8,7 +8,7 @@ module top (
     logic [31:0] instr;
 
 
-    logic reg_wirte, mem_write, alu_src, result_src;
+    logic reg_write, mem_write, alu_src, result_src;
     logic branch, jump, zero, lt, ltu, valid_branch;
     logic [3:0] alu_ctrl;
 
@@ -37,7 +37,7 @@ module top (
 
     control_unit u_control(
         .opcode(instr[6:0]),
-        .reg_wirte(reg_wirte),
+        .reg_write(reg_write),
         .mem_write(mem_write),
         .alu_src(alu_src),
         .result_src(result_src),
@@ -52,7 +52,7 @@ module top (
     register_file u_reg_file(
         .clk(clk),
         .rst_n(rst_n),
-        .we(reg_wirte),
+        .we(reg_write),
         .rs1_addr(instr[19:15]),
         .rs2_addr(instr[24:20]),
         .rd_addr(instr[11:7]),
