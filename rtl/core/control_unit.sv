@@ -54,6 +54,10 @@ module control_unit (
                 reg_write = 1;
                 imm_select = 3'b011;
             end
+            7'b1100111:begin // I JALR
+                alu_src = 1;
+                jump = 1;
+            end
             7'b0?10111: begin
                 imm_select = 3'b100;
                 reg_write = 1;
