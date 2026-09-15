@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1789490793" />
+    <testcase name="test_cpu" classname="test_top" file="/home/slifer/repos/projects/risc-v-processor/dv/tests/test_top.py" lineno="5" time="0.0010662078857421875" sim_time_ns="50.0" ratio_time="46895.16994633274" />
+  </testsuite>
+</testsuites>

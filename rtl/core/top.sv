@@ -1,4 +1,6 @@
-module top (
+module top #(
+    parameter string INIT_FILE = ""
+)(
     input logic clk,rst_n
 );
 
@@ -23,7 +25,9 @@ module top (
         .pc(pc)
     );
 
-    instr_mem u_instr_mem (
+    instr_mem #(
+        .INIT_FILE(INIT_FILE)
+    )u_instr_mem (
         .a(pc[11:2]),
         .rd(instr)
     );
