@@ -34,7 +34,9 @@ module top (
     assign pc_src = jump | (branch & valid_branch);
     
     logic [31:0] pc_jb;
-    assign pc_jb =(jump & alu_src) ? (alu_result & 32'hFFFFFFFE) : (pc + imm);
+    logic [31:0] pc_imm;
+    assign pc_imm = pc + imm;
+    assign pc_jb =(jump & alu_src) ? (alu_result & 32'hFFFFFFFE) : pc_imm;
 
     assign next_pc = pc_src ? pc_jb : pc_plus_4;
 
@@ -51,7 +53,7 @@ module top (
         .alu_ctrl(alu_ctrl[3:0]),
         .imm_select(imm_select)
     );
-    assign write_reg_data = jump ? pc_plus_4 : wd3;
+    
     register_file u_reg_file(
         .clk(clk),
         .rst_n(rst_n),
@@ -110,5 +112,22 @@ module top (
         );
 
     assign wd3 = result_src? load_data:alu_result;
+
+    always_comb begin
+        if (jump) begin
+            write_reg_data = pc_plus_4;
+        end else begin 
+            if (imm_select == 3'b100) begin// U type
+                if(instr[5]) begin
+                    write_reg_data = imm;
+                end else begin 
+                    write_reg_data = pc_imm;
+                end
+            end else begin
+                write_reg_data = wd3;
+            end 
+        end
+    end
+
 
 endmodule
