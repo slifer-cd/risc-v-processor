@@ -1,4 +1,4 @@
-module top #(
+module singlecycle #(
     parameter string INIT_FILE = ""
 )(
     input logic clk,rst_n

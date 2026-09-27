@@ -9,8 +9,8 @@ VERILOG_SOURCES += $(wildcard $(PWD)/rtl/memory/*.sv)
 VERILOG_SOURCES += $(wildcard $(PWD)/rtl/core/*.sv)
 # VERILOG_SOURCES += $(PWD)/dv/wrappers/tb_top.sv
 
-# The top-level module in your top.sv
-TOPLEVEL = top
+# The top-level module in your singlecycle.sv
+TOPLEVEL = singlecycle
 
 # The Python test file to run (located in dv/tests/test_top.py)
 # Note: Use dot notation, dropping the .py extension

@@ -2,3 +2,4 @@
 sim_build/
 **/__pycache__/*
 dump.vcd
+layout.drawio.svg
