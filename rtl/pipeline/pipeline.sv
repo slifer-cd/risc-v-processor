@@ -47,21 +47,21 @@ module pipeline #(
 
     /* Control Section */ 
 
-    logic id_alu_src,id_mem_write, id_write_back, id_result_src;
+    logic id_alu_src,id_mem_write, id_write_back, id_result_src,id_jump;
     logic [3:0] id_alu_ctrl;
-    logic [2:0] select; // imm_gen 
+    logic [2:0] id_imm_select; // imm_gen 
     /* Control Section */ 
 
-    logic wb_write_back;
-    logic [4:0] rd_addr;
-    logic [31:0] rd_data;
+    logic [4:0] wb_rd_addr;
+    logic [31:0] rd_data; // write back data
     
 
     /* from the control and last stage register 
     depeneds from where that data is coming from
     */
-    logic id_rs1_addr = id_instr[19:15];
-    logic id_rs2_addr = id_instr[24:20];
+    logic [4:0] id_rs1_addr = id_instr[19:15];
+    logic [4:0] id_rs2_addr = id_instr[24:20];
+    logic [4:0] id_rd_addr = id_instr[11:7];
     logic id_func3 = id_instr[14:12];
     logic [31:0] id_rs1_data, id_rs2_data;
     register_file register_file_ins(
@@ -70,7 +70,7 @@ module pipeline #(
         .we(wb_write_back),
         .rs1_addr(id_rs1_addr),
         .rs2_addr(id_rs2_addr),
-        .rd_addr(rd_addr),
+        .rd_addr(wb_rd_addr),
         .rd_data(rd_data),
         .rs1_data(id_rs1_data),
         .rs2_data(id_rs2_data)
@@ -91,15 +91,16 @@ module pipeline #(
     logic [31:0] id_immediate;
     imm_gen imm_gen_ins(
         .instruction(id_instr[31:7]),
-        .select(select),
+        .select(id_imm_select),
         .immediate(id_immediate)
     );
 
     logic [31:0] ex_pc, ex_rs1,ex_rs2,ex_imm;
     logic [4:0] ex_rs1_addr, ex_rs2_addr, ex_rd_addr;
     logic [3:0] ex_alu_ctrl;
-    logic ex_alu_src, ex_mem_write, ex_write_back, ex_result_src;
-    logic [2:0] ex_func3;
+    logic ex_alu_src, ex_mem_write, ex_write_back, ex_result_src, id_instr_5, ex_instr_5, ex_jump;
+    logic [2:0] ex_func3, ex_imm_select;
+    assign id_instr_5 = id_instr[5];
     id_ex_reg id_ex_register(
         .clk(clk),
         .rst_n(rst_n),
@@ -109,13 +110,16 @@ module pipeline #(
         .id_imm(id_immediate),
         .id_rs1_addr(id_rs1_addr),
         .id_rs2_addr(id_rs2_addr),
-        .id_rd_addr(rd_addr),
+        .id_rd_addr(id_rd_addr),
         .id_alu_ctrl(id_alu_ctrl),
         .id_alu_src(id_alu_src),
         .id_mem_write(id_mem_write),
         .id_write_back(id_write_back),
         .id_result_src(id_result_src),
         .id_func3(id_func3),
+        .id_imm_select(id_imm_select),
+        .id_instr_5(id_instr_5),
+        .id_jump(id_jump),
         .ex_pc(ex_pc),
         .ex_rs1(ex_rs1),
         .ex_rs2(ex_rs2),
@@ -128,7 +132,10 @@ module pipeline #(
         .ex_mem_write(ex_mem_write),
         .ex_write_back(ex_write_back),
         .ex_result_src(ex_result_src),
-        .ex_func3(ex_func3)
+        .ex_func3(ex_func3),
+        .ex_imm_select(ex_imm_select),
+        .ex_instr_5(ex_instr_5),
+        .ex_jump(ex_jump)
     );
 
 
@@ -147,9 +154,10 @@ module pipeline #(
 
 
 
-    logic mem_mem_write, mem_write_back, mem_result_src;
-    logic [31:0] mem_alu_result, mem_rs2;
-    logic [2:0] mem_func3;
+    logic mem_mem_write, mem_write_back, mem_result_src, mem_instr_5, mem_jump;
+    logic [31:0] mem_alu_result, mem_rs2, mem_pc, mem_imm;
+    logic [2:0] mem_func3, mem_imm_select;
+    logic [4:0] mem_rd_addr;
     ex_mem_reg ex_mem_register(
         .clk(clk),
         .rst_n(rst_n),
@@ -159,12 +167,24 @@ module pipeline #(
         .ex_func3(ex_func3),
         .ex_rs2(ex_rs2),
         .ex_alu_result(ex_alu_result),
+        .ex_rd_addr(ex_rd_addr),
+        .ex_pc(ex_pc),
+        .ex_imm(ex_imm),
+        .ex_imm_select(ex_imm_select),
+        .ex_instr_5(ex_instr_5),
+        .ex_jump(ex_jump),
+        .mem_rd_addr(mem_rd_addr),
         .mem_mem_write(mem_mem_write),
         .mem_write_back(mem_write_back),
         .mem_result_src(mem_result_src),
         .mem_func3(mem_func3),
         .mem_rs2(mem_rs2),
-        .mem_alu_result(mem_alu_result)
+        .mem_alu_result(mem_alu_result),
+        .mem_pc(mem_pc),
+        .mem_imm(mem_imm),
+        .mem_imm_select(mem_imm_select),
+        .mem_instr_5(mem_instr_5),
+        .mem_jump(mem_jump)
     );
 
     // Mem stage
@@ -185,4 +205,41 @@ module pipeline #(
         .offset(mem_alu_result[1:0]),
         .data_out(mem_load_data)
     );
+
+    logic wb_write_back, wb_result_src, wb_instr_5, wb_jump;
+    logic [31:0] wb_alu_result, wb_load_data, wb_pc, wb_imm, wb_imm_select;
+    mem_wb_reg mem_wb_register(
+        .clk(clk),
+        .rst_n(rst_n),
+        .mem_write_back(mem_write_back),
+        .mem_result_src(mem_result_src),
+        .mem_alu_result(mem_alu_result),
+        .mem_load_data(mem_load_data),
+        .mem_rd_addr(mem_rd_addr),
+        .mem_pc(mem_pc),
+        .mem_imm(mem_imm),
+        .mem_imm_select(mem_imm_select),
+        .mem_instr_5(mem_instr_5),
+        .mem_jump(mem_jump),
+        .wb_write_back(wb_write_back),
+        .wb_result_src(wb_result_src),
+        .wb_alu_result(wb_alu_result),
+        .wb_load_data(wb_load_data),
+        .wb_rd_addr(wb_rd_addr),
+        .wb_pc(wb_pc),
+        .wb_imm(wb_imm),
+        .wb_imm_select(wb_imm_select),
+        .wb_instr_5(wb_instr_5),
+        .wb_jump(wb_jump)
+    );
+
+    logic [31:0] wb_pc_plus_4, wb_pc_plus_imm;
+    assign wb_pc_plus_4 = wb_pc + 32'd4; 
+    assign wb_pc_plus_imm = wb_pc + wb_imm;
+
+    logic [31:0] bottom_mux_1,bottom_mux_2, mid_mux;
+    assign bottom_mux_1 = wb_result_src ? wb_load_data: wb_alu_result; // 1 load, 0 alu
+    assign bottom_mux_2 = wb_instr_5 ? wb_imm : wb_pc_plus_imm; // 1 imm, 0 pc + imm
+    assign mid_mux = wb_imm_select == 3'b100 ? bottom_mux_2 : bottom_mux_1; // 1 U type, 0 for nun U type
+    assign rd_data = wb_jump ? wb_pc_plus_4 : mid_mux;// 1 jump 0 from other
 endmodule
