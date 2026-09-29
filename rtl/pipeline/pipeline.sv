@@ -59,10 +59,12 @@ module pipeline #(
     /* from the control and last stage register 
     depeneds from where that data is coming from
     */
-    logic [4:0] id_rs1_addr = id_instr[19:15];
-    logic [4:0] id_rs2_addr = id_instr[24:20];
-    logic [4:0] id_rd_addr = id_instr[11:7];
-    logic id_func3 = id_instr[14:12];
+    logic [4:0] id_rs1_addr, id_rs2_addr, id_rd_addr;
+    assign id_rs1_addr = id_instr[19:15];
+    assign id_rs2_addr = id_instr[24:20];
+    assign id_rd_addr = id_instr[11:7];
+    logic [2:0]id_func3;
+    assign id_func3 = id_instr[14:12];
     logic [31:0] id_rs1_data, id_rs2_data;
     register_file register_file_ins(
         .clk(clk),
