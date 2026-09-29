@@ -1,7 +1,7 @@
 module pipeline_alu (
     input logic [31:0] a, b,
     input logic [3:0] alu_ctrl,
-    output logic [31:0] result,
+    output logic [31:0] result
 );
 
     always_comb begin 
