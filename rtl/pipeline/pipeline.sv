@@ -47,9 +47,22 @@ module pipeline #(
 
     /* Control Section */ 
 
-    logic id_alu_src,id_mem_write, id_write_back, id_result_src,id_jump;
+    logic id_alu_src, id_mem_write, id_write_back, id_result_src, id_jump, id_branch;
     logic [3:0] id_alu_ctrl;
     logic [2:0] id_imm_select; // imm_gen 
+
+    pipeline_control_unit pipeline_control_unit_ins(
+        .id_opcode(id_instr[6:0]),
+        .id_func3(id_instr[14:12]),
+        .id_instr30(id_instr[30]),
+        .id_branch(id_branch),
+        .id_jump(id_jump),
+        .id_alu_src(id_alu_src),
+        .id_alu_ctrl(id_alu_ctrl),
+        .id_write_back(id_write_back),
+        .id_result_src(id_result_src),
+        .id_mem_write(id_mem_write)
+    );
     /* Control Section */ 
 
     logic [4:0] wb_rd_addr;
