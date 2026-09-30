@@ -1,2 +1,3 @@
 - first add the next pc logic
 - edit the hazard unit when we have a jmp
+- add the branch prediction unit
