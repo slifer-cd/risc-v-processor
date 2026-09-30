@@ -156,16 +156,100 @@ module pipeline #(
 
     // EX stage
 
+    // Forwarding unit
+    logic [31:0] ex_rs1_forwarded, ex_rs2_forwarded;
+    logic [1:0] rs1_mux_stage, rs1_mux_data, rs2_mux_stage, rs2_mux_data;
+    pipeline_forwarding_unit pipeline_forwarding_unit_ins(
+        .mem_write_back(mem_write_back),
+        .wb_write_back(wb_write_back),
+        .mem_jump(mem_jump),
+        .wb_jump(wb_jump),
+        .wb_result_src(wb_result_src),
+        .mem_rd_addr(mem_rd_addr),
+        .wb_rd_addr(wb_rd_addr),
+        .ex_rs1_addr(ex_rs1_addr),
+        .ex_rs2_addr(ex_rs2_addr),
+        .mem_imm_select(mem_imm_select),
+        .wb_imm_select(wb_imm_select),
+        .rs1_mux_stage(rs1_mux_stage),
+        .rs2_mux_stage(rs2_mux_stage),
+        .rs1_mux_data(rs1_mux_data),
+        .rs2_mux_data(rs2_mux_data)
+    ); 
+
+    logic [31:0] rs1_back_mem_mux, rs1_back_wb_mux, rs2_back_mem_mux, rs2_back_wb_mux;
+    always_comb begin
+        
+        case (rs1_mux_data)
+            2'b10: begin
+                rs1_back_mem_mux = mem_pc + 32'd4;
+                rs1_back_wb_mux = wb_pc_plus_4;
+            end
+            2'b01 : begin
+                rs1_back_mem_mux = mem_instr_5 ? mem_imm : (mem_pc + mem_imm);
+                rs1_back_wb_mux = wb_instr_5 ? wb_imm : (wb_pc + wb_imm);
+            end
+            2'b11: begin
+                rs1_back_mem_mux = mem_alu_result;
+                rs1_back_wb_mux = wb_load_data;
+            end
+            2'b00: begin
+                rs1_back_mem_mux = mem_alu_result;
+                rs1_back_wb_mux = wb_alu_result;
+            end
+        endcase
+
+        case (rs2_mux_data)
+            2'b10: begin
+                rs2_back_mem_mux = mem_pc + 32'd4;
+                rs2_back_wb_mux = wb_pc_plus_4;
+            end
+            2'b01 : begin
+                rs2_back_mem_mux = mem_instr_5 ? mem_imm : (mem_pc + mem_imm);
+                rs2_back_wb_mux = wb_instr_5 ? wb_imm : (wb_pc + wb_imm);
+            end
+            2'b11: begin
+                rs2_back_mem_mux = mem_alu_result;
+                rs2_back_wb_mux = wb_load_data;
+            end
+            2'b00: begin
+                rs2_back_mem_mux = mem_alu_result;
+                rs2_back_wb_mux = wb_alu_result;
+            end
+        endcase
+
+        case(rs1_mux_stage)
+            2'b10: begin
+                ex_rs1_forwarded = rs1_back_wb_mux;
+            end
+
+            2'b01: begin
+                ex_rs1_forwarded = rs1_back_mem_mux;
+            end
+            default: ex_rs1_forwarded = ex_rs1;
+        endcase
+
+        case(rs2_mux_stage)
+            2'b10: begin
+                ex_rs2_forwarded = rs2_back_wb_mux;
+            end
+
+            2'b01: begin
+                ex_rs2_forwarded = rs2_back_mem_mux;
+            end
+            default: ex_rs2_forwarded = ex_rs2;
+        endcase
+    end
+
     logic [31:0] ex_alu_b, ex_alu_result;
-    assign ex_alu_b = ex_alu_src ? ex_imm: ex_rs2;
+    assign ex_alu_b = ex_alu_src ? ex_imm: ex_rs2_forwarded;
     pipeline_alu pipeline_alu_ins(
-        .a(ex_rs1),
+        .a(ex_rs1_forwarded),
         .b(ex_alu_b),
         .alu_ctrl(ex_alu_ctrl),
         .result(ex_alu_result)
     );
 
-    // Forwarding unit needed
 
 
 
@@ -180,7 +264,7 @@ module pipeline #(
         .ex_write_back(ex_write_back),
         .ex_result_src(ex_result_src),
         .ex_func3(ex_func3),
-        .ex_rs2(ex_rs2),
+        .ex_rs2(ex_rs2_forwarded),
         .ex_alu_result(ex_alu_result),
         .ex_rd_addr(ex_rd_addr),
         .ex_pc(ex_pc),
