@@ -1,5 +1,5 @@
 module id_ex_reg (
-    input logic clk,rst_n, id_alu_src, id_mem_write, id_write_back, id_result_src, id_instr_5, id_jump,
+    input logic clk,rst_n, id_ex_flush, id_alu_src, id_mem_write, id_write_back, id_result_src, id_instr_5, id_jump,
     input logic [31:0] id_pc, id_rs1,id_rs2,id_imm,
     input logic [4:0] id_rs1_addr, id_rs2_addr, id_rd_addr,
     input logic [3:0] id_alu_ctrl,
@@ -13,7 +13,7 @@ module id_ex_reg (
 );
 
     always_ff @( posedge clk or negedge rst_n ) begin
-        if(!rst_n) begin
+        if(!rst_n || id_ex_flush) begin
             ex_pc <= 32'b0;
             ex_rs1 <= 32'b0;
             ex_rs2 <= 32'b0;

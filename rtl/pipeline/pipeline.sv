@@ -43,8 +43,15 @@ module pipeline #(
 
     // ID section
 
-    // control unit and hazard detection unit needed
-
+    pipeline_hazard_detection_unit pipeline_hazard_detection_unit_ins(
+        .id_rs1_addr(id_rs1_addr),
+        .id_rs2_addr(id_rs2_addr),
+        .ex_rd_addr(ex_rd_addr),
+        .ex_result_src(ex_result_src),
+        .pc_write(pc_write),
+        .if_id_write(if_id_write),
+        .id_ex_flush(id_ex_flush)
+    );
     /* Control Section */ 
 
     logic id_alu_src, id_mem_write, id_write_back, id_result_src, id_jump, id_branch;
@@ -61,7 +68,8 @@ module pipeline #(
         .id_alu_ctrl(id_alu_ctrl),
         .id_write_back(id_write_back),
         .id_result_src(id_result_src),
-        .id_mem_write(id_mem_write)
+        .id_mem_write(id_mem_write),
+        .id_imm_select(id_imm_select)
     );
     /* Control Section */ 
 
@@ -113,7 +121,7 @@ module pipeline #(
     logic [31:0] ex_pc, ex_rs1,ex_rs2,ex_imm;
     logic [4:0] ex_rs1_addr, ex_rs2_addr, ex_rd_addr;
     logic [3:0] ex_alu_ctrl;
-    logic ex_alu_src, ex_mem_write, ex_write_back, ex_result_src, id_instr_5, ex_instr_5, ex_jump;
+    logic ex_alu_src, ex_mem_write, ex_write_back, ex_result_src, id_instr_5, ex_instr_5, ex_jump, id_ex_flush;
     logic [2:0] ex_func3, ex_imm_select;
     assign id_instr_5 = id_instr[5];
     id_ex_reg id_ex_register(
@@ -135,6 +143,7 @@ module pipeline #(
         .id_imm_select(id_imm_select),
         .id_instr_5(id_instr_5),
         .id_jump(id_jump),
+        .id_ex_flush(id_ex_flush),
         .ex_pc(ex_pc),
         .ex_rs1(ex_rs1),
         .ex_rs2(ex_rs2),
