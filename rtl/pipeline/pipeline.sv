@@ -315,7 +315,8 @@ module pipeline #(
     );
 
     logic wb_write_back, wb_result_src, wb_instr_5, wb_jump;
-    logic [31:0] wb_alu_result, wb_load_data, wb_pc, wb_imm, wb_imm_select;
+    logic [31:0] wb_alu_result, wb_load_data, wb_pc, wb_imm;
+    logic [2:0] wb_imm_select;
     mem_wb_reg mem_wb_register(
         .clk(clk),
         .rst_n(rst_n),
