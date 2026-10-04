@@ -10,6 +10,15 @@ module pipeline #(
     logic pc_write; // from hazard unit
     logic [31:0] pc, next_pc, pc_plus_4;
     assign pc_plus_4 = pc + 32'd4; 
+    logic [31:0] pc_jump, pc_jump_normal, pc_predicted, correcting_pc;
+    assign pc_jump = (id_rs1_data  + id_immediate) & 32'hfffffffe;
+    assign pc_jump_normal = id_jump ? pc_jump : pc_plus_4;
+    assign pc_predicted = predict_pc ? if_target_address : pc_jump_normal;
+    assign correcting_pc = first_reg_status ? id_pc_plus_4 : id_target_address;
+    assign next_pc = correct_prediction ? pc_predicted : correcting_pc;
+
+    
+
     pipeline_pc_reg pc_register (
         .clk(clk),
         .rst_n(rst_n),
@@ -27,6 +36,27 @@ module pipeline #(
             .rd(instr)
     );
 
+    logic correct_prediction ,update_status, update_target_address, predict_pc, first_reg_status;
+    logic [31:0] id_target_address, if_target_address;
+    assign id_target_address = (id_pc + id_immediate);
+    assign update_status = id_branch;
+    assign update_target_address = id_branch;
+
+    pipeline_branch_unit pipeline_branch_unit_ins(
+        .clk(clk),
+        .rst_n(rst_n),
+        .correct_prediction(correct_prediction),
+        .pc(pc),
+        .id_target_address(id_target_address),
+        .opcode(instr[6:0]),
+        .update_status(update_status),
+        .update_target_address(update_target_address),
+        .if_target_address(if_target_address),
+        .predict_pc(predict_pc),
+        .first_reg_status(first_reg_status)
+    );
+
+
     logic [31:0] id_instr, id_pc, id_pc_plus_4;
     logic if_flush, if_id_write; // flush from branch unit, write from hazard detection unit
     if_id_reg if_id_register (
@@ -43,14 +73,18 @@ module pipeline #(
 
     // ID section
 
+
     pipeline_hazard_detection_unit pipeline_hazard_detection_unit_ins(
         .id_rs1_addr(id_rs1_addr),
         .id_rs2_addr(id_rs2_addr),
         .ex_rd_addr(ex_rd_addr),
         .ex_result_src(ex_result_src),
+        .id_jump(id_jump),
         .pc_write(pc_write),
         .if_id_write(if_id_write),
-        .id_ex_flush(id_ex_flush)
+        .id_ex_flush(id_ex_flush),
+        .if_flush(if_flush),
+        .correct_prediction(correct_prediction)
     );
     /* Control Section */ 
 
@@ -109,7 +143,17 @@ module pipeline #(
         .ltu(ltu)
     );
 
-
+    always_comb begin
+        case(id_func3)
+            3'b000: correct_prediction = equal;
+            3'b001: correct_prediction = ~equal;
+            3'b100: correct_prediction = lt;
+            3'b101: correct_prediction = ~lt;
+            3'b110: correct_prediction = ltu;
+            3'b111: correct_prediction = ~ltu;
+            default: correct_prediction = 'b1;
+        endcase
+    end
 
     logic [31:0] id_immediate;
     imm_gen imm_gen_ins(
